@@ -12,8 +12,6 @@
  *  
  **/
  
-namespace Netzmacht\Utils;
-use Backend;
 
 /**
  * Register the namespaces
