@@ -336,9 +336,6 @@ class DataContainer extends Backend
 	 */
 	protected function buttonRuleHasAccess(&$strButton, &$strHref, &$strLabel, &$strTitle, &$strIcon, &$strAttributes, &$arrAttributes, $arrRow=null)
 	{
-		var_dump($strButton);
-		var_dump($arrAttributes);
-			
 		if(isset($arrAttributes['isAdmin']) && $arrAttributes['isAdmin']  && $this->User->isAdmin)
 		{
 				return true;			
@@ -542,7 +539,6 @@ class DataContainer extends Backend
 	 */
 	protected function labelRuleYesNo(&$arrRow, &$strLabel, &$objDc, &$arrValues, &$arrAttributes)
 	{
-		var_dump($arrRow[$arrAttributes['field']]);
 		$strYesNow = ($arrRow[$arrAttributes['field']]) ? 'yes' : 'no';
 		
 		$arrValues[$arrAttributes['index']] = $GLOBALS['TL_LANG']['MSC'][$strYesNow];
