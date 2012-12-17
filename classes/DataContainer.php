@@ -70,6 +70,7 @@ class DataContainer extends Backend
 		parent::__construct();
 		
 		$this->import('BackendUser', 'User');
+		$this->import('Input');
 		
 		if($this->strTable === null)
 		{
@@ -145,7 +146,7 @@ class DataContainer extends Backend
 		{
 			$arrAttributes = array();
 			$this->parseRule($strRule, $arrAttributes, null, null, null, null, null, null, null, 'permission');
-			$strError = sprintf('Not enough permissions for action "%" on item with ID "%s"', \Input::get('act'), \Input::get('id'));
+			$strError = sprintf('Not enough permissions for action "%" on item with ID "%s"', $this->Input->get('act'), $this->Input->get('id'));
 			
 			if(!$this->{$strRule}($objDc, $arrAttributes, $strError))
 			{
@@ -417,9 +418,9 @@ class DataContainer extends Backend
 	 */
 	protected function buttonRuleToggleIcon(&$strButton, &$strHref, &$strLabel, &$strTitle, &$strIcon, &$strAttributes, &$arrAttributes, $arrRow=null)
 	{
-		if (strlen(\Input::get('tid')))
+		if (strlen($this->Input->get('tid')))
 		{
-			$this->toggleState(\Input::get('tid'), (\Input::get('state') == 1), $arrAttributes);
+			$this->toggleState($this->Input->get('tid'), ($this->Input->get('state') == 1), $arrAttributes);
 			$this->redirect($this->getReferer());
 		}
 		
@@ -692,7 +693,7 @@ class DataContainer extends Backend
 				$arrAttributes['act'] = array($arrAttributes['act']);
 			}
 			
-			if(!in_array(\Input::get('act'), $arrAttributes['act']))
+			if(!in_array($this->Input->get('act'), $arrAttributes['act']))
 			{
 				$blnPermission = false;
 			}			
@@ -746,7 +747,7 @@ class DataContainer extends Backend
 		{
 			if(!isset($arrAttributes['value']))
 			{
-				$arrAttributes['value'] = \Input::get('id');			
+				$arrAttributes['value'] = $this->Input->get('id');			
 			}
 			
 			return $this->genericIsAllowed($arrAttributes, $objDc->activeRecord->row());			
@@ -815,7 +816,7 @@ class DataContainer extends Backend
 				
 				foreach ($arrAttributes['params']  as $strParam) 
 				{
-					$arrParams[] = \Input::get($strParam);					
+					$arrParams[] = $this->Input->get($strParam);					
 				}
 				
 				$strError = call_user_func_array('sprintf', $arrParams);				
@@ -833,8 +834,8 @@ class DataContainer extends Backend
 	protected function toggleState($intId, $blnVisible, &$arrAttributes)
 	{
 		// Check permissions to edit
-		\Input::setGet('id', $intId);
-		\Input::setGet('act', 'toggle');
+		$this->Input->setGet('id', $intId);
+		$this->Input->setGet('act', 'toggle');
 		
 		$this->checkPermission();
 		
