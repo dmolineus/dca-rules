@@ -42,10 +42,16 @@ provides callbacks
 	}
 
 	// Contao 2
-	class MyTable extends DataContainerRules
+	require_once 'system/modules/dca-rules/classes/DataContainer.php'
+	class MyTable extends DataContainer extends Netzmacht\Utils\DataContainer
 	{
 	}
 	
+	// alternative
+	class MyTable extends DataContainerRules
+	{
+	}
+
 	// in the tl_my_table.php
 	$GLOBALS['TL_DCA']['table']['list']['operations']['button']['button_callback'] = array('Author\Vendor\DataContainer\MyTable', 'generateButton');
 	$GLOBALS['TL_DCA']['table']['list']['operations']['button']['button_rules'] = array('isAdmin', 'generate');
@@ -73,7 +79,7 @@ the only thing you have to do is to define the rule and pass the field. If no fi
 Another example is the checkPermission callback. Maybe you want to limit the access to the dca for the admin for every action exept the show action.
 You can solve it by assigning a isAdmin rule and set the act modes. Then the rule is only used if on the act mode
 
-	$GLOBALS['TL_DCA']['table']['config']['check_permission'] = array('isAdmin:act=[edit,editAll,delete,select]', 'generate');
+	$GLOBALS['TL_DCA']['table']['config']['permission_rules'] = array('isAdmin:act=[edit,editAll,delete,select]', 'generate');
 	
 Using label_rules
 ------
@@ -105,6 +111,18 @@ let's create a buttonRuleAddState, the new $strHref will be used by the generate
 	protected function buttonRuleAddState(&$strButton, &$strHref, &$strLabel, &$strTitle, &$strIcon, &$strAttributes, &$arrAttributes, $arrRow=null)
 	{
 		$strHref .= '&state=1';
+		return true;
+	}
+	
+It is also possible to add something to the output. Let's say you want to add the current time behind a global button. The output will be stored in 
+$this->strGenerated variable. Note that we first generate the button before we add something to the generated output.
+
+	// dca config
+	$GLOBALS['TL_DCA']['table']['list']['operations']['button']['button_rules'] = array('generate', 'addTime');
+
+	protected function buttonRuleAddTime(&$strButton, &$strHref, &$strLabel, &$strTitle, &$strIcon, &$strAttributes, &$arrAttributes, $arrRow=null)
+	{
+		$this->strGenerated .= sprintf(' (%s)', date('h:i'));
 		return true;
 	}
 	
