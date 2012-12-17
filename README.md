@@ -77,9 +77,10 @@ the only thing you have to do is to define the rule and pass the field. If no fi
 	$GLOBALS['TL_DCA']['table']['list']['operations']['button']['button_rules'] = array('toggleIcon:field=status', 'generate');
 
 Another example is the checkPermission callback. Maybe you want to limit the access to the dca for the admin for every action exept the show action.
-You can solve it by assigning a isAdmin rule and set the act modes. Then the rule is only used if on the act mode
+You can solve it by assigning a isAdmin rule and set the act modes, so the rule is only check if the act param is like this. You maybe also 
+want to disable the multiple feature. You can use the forbidden rule for that
 
-	$GLOBALS['TL_DCA']['table']['config']['permission_rules'] = array('isAdmin:act=[edit,editAll,delete,select]');
+	$GLOBALS['TL_DCA']['table']['config']['permission_rules'] = array('forbidden:act=[editAll,deleteAll]', 'isAdmin:act=[edit,delete,select]');
 	
 Using label_rules
 ------
