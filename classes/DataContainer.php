@@ -550,7 +550,6 @@ class DataContainer extends Backend
 	 */
 	protected function labelRuleYesNo(&$arrRow, &$strLabel, &$objDc, &$arrValues, &$arrAttributes)
 	{
-		var_dump($arrAttributes);
 		$mixedValue = isset($arrAttributes['field'])? $arrRow[$arrAttributes['field']] : $arrValues[$arrAttributes['index']];
 		
 		if(isset($arrAttributes['condition']))
