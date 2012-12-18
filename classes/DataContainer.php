@@ -480,18 +480,23 @@ class DataContainer extends Backend
 		
 		if(isset($arrAttributes['module']))
 		{
-			$blnHasAccess &= $this->User->hasAccess($arrAttributes['module'], 'module');			
+			$blnHasAccess = $this->User->hasAccess($arrAttributes['module'], 'module');			
+		}
+		
+		if($blnHasAccess && isset($arrAttributes['permission']) && isset($arrAttributes['action']))
+		{
+			$blnHasAccess = $this->User->hasAccess($arrAttributes['action'], $arrAttributes['permission']);			
 		}
 		
 		if($blnHasAccess && isset($arrAttributes['alexf']))
 		{
 			$strTable = isset($arrAttributes['table']) ? $arrAttributes['table'] : $this->strTable;
-			$blnHasAccess &= $this->User->hasAccess($strTable . '::' . $arrAttributes['alexf'], 'alexf');
+			$blnHasAccess = $this->User->hasAccess($strTable . '::' . $arrAttributes['alexf'], 'alexf');
 		}
 		
 		if($blnHasAccess && isset($arrAttributes['fop']))
 		{
-			$blnHasAccess &= $this->User->hasAccess($arrAttributes['fop'], 'fop');
+			$blnHasAccess = $this->User->hasAccess($arrAttributes['fop'], 'fop');
 		}
 		
 		return $blnHasAccess;
@@ -537,12 +542,29 @@ class DataContainer extends Backend
 	 * @param array reference to values
 	 * @param int value of index
 	 * @param string field name
+	 * @param array attributes, supports
+	 * 		- index int index of value
+	 * 		- field string field name
+	 * 		- condition mixed optional if you want to check a condition not only a value
+	 * 		- is mixed optional to check value against another value, otherwise only true/false of value is checked
 	 */
 	protected function labelRuleYesNo(&$arrRow, &$strLabel, &$objDc, &$arrValues, &$arrAttributes)
 	{
-		$strYesNow = ($arrRow[$arrAttributes['field']]) ? 'yes' : 'no';
+		var_dump($arrAttributes);
+		$mixedValue = isset($arrAttributes['field'])? $arrRow[$arrAttributes['field']] : $arrValues[$arrAttributes['index']];
 		
-		$arrValues[$arrAttributes['index']] = $GLOBALS['TL_LANG']['MSC'][$strYesNow];
+		if(isset($arrAttributes['condition']))
+		{
+			$blnIs = isset($arrAttributes['is']) ? $arrAttributes['is'] : true;
+			$strYesNo = (($mixedValue == $arrAttributes['condition']) == $blnIs) ? 'yes' : 'no';
+		}
+		else 
+		{
+			$mixedValue = isset($arrAttributes['is']) ? ($mixedValue == $arrAttributes['is']) : $mixedValue;
+			$strYesNo = ($mixedValue) ? 'yes' : 'no';	
+		}
+		
+		$arrValues[$arrAttributes['index']] = $GLOBALS['TL_LANG']['MSC'][$strYesNo];
 	}
 	
 	
