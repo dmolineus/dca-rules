@@ -21,4 +21,3 @@ require_once TL_ROOT . '/system/modules/dca-rules/classes/DataContainer.php';
 class DataContainerRules extends Netzmacht\Utils\DataContainer
 {
 }
- 
