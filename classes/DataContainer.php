@@ -816,7 +816,7 @@ class DataContainer extends Backend
 				
 				foreach ($arrAttributes['params']  as $strParam) 
 				{
-					$arrParams[] = $this->Input->get($strParam);					
+					$arrParams[] = ($strParam == '%user') ? $this->User->username : $this->Input->get($strParam);					
 				}
 				
 				$strError = call_user_func_array('sprintf', $arrParams);				
