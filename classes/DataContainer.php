@@ -103,7 +103,8 @@ class DataContainer extends Backend
 		foreach ($arrRules as $strRule) 
 		{
 			$arrAttributes = array();
-			$this->parseRule($strRule, $arrAttributes, null, null, null, null, null, null, null, 'permission');
+			$this->parseRule($strRule, $arrAttributes, 'permission');
+			
 			$strError = sprintf('Not enough permissions for action "%" on item with ID "%s"', $this->Input->get('act'), $this->Input->get('id'));
 			
 			if(!$this->{$strRule}($objDc, $arrAttributes, $strError))
@@ -136,7 +137,7 @@ class DataContainer extends Backend
 		{
 			$arrAttributes = array();
 			
-			$this->parseRule($strRule, $arrAttributes, null, null, $strLabel, null, null, null, $arrRow, 'label');			
+			$this->parseRule($strRule, $arrAttributes, 'label');			
 			$this->{$strRule}($arrRow, $strLabel, $objDc, $arrValues, $arrAttributes);
 		}
 		
@@ -158,7 +159,6 @@ class DataContainer extends Backend
 	 */
 	protected function buttonRuleGenerate(&$strButton, &$strHref, &$strLabel, &$strTitle, &$strIcon, &$strAttributes, &$arrAttributes, $arrRow=null)
 	{
-		
 		// global button
 		if($arrRow === null)
 		{
@@ -374,7 +374,7 @@ class DataContainer extends Backend
 		
 		foreach ($arrRules as $strRule) 
 		{
-			$this->parseRule($strRule, $arrAttributes, $strButton, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes, $arrRow);
+			$this->parseRule($strRule, $arrAttributes);
 			
 			if(!$this->$strRule($strButton, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes, $arrAttributes, $arrRow))
 			{
@@ -544,13 +544,6 @@ class DataContainer extends Backend
 	 * 
 	 * @param string the rule
 	 * @param array attributes
-	 * @param string button
-	 * @param string href
-	 * @param string label
-	 * @param string title
-	 * @param string icon
-	 * @param string attributes
-	 * @param array current row
 	 * @param string rule prefix
 	 * 
 	 * Syntax of a rule: do not use spaces
@@ -564,10 +557,13 @@ class DataContainer extends Backend
 	 * 		'hasAccess:module=[files,news]', 	// set attribute module=array('files', 'news') 
 	 * 		'hasAccess:isAdmin=false', 			// convert to boolean attributes isAdmin=false
 	 * 		'hasAccess:isAdmin=1', 				// convert to int attributes isAdmin=1
-	 * 		'tile:value=$strLabel', 			// access php variables, given as arguments, no array key access posible
+	 * 		'title:value=$strLabel', 			// access php variables, given as arguments, no array key access posible
+	 * 		'hasAccess:error=&.lang'			// access $GLOBALS['TL_LANG'][$this->strTable]['lang']
+	 * 		'hasAccess:error=&.lang.0'			// access $GLOBALS['TL_LANG'][$this->strTable]['lang'][0]
+	 * 		'hasAccess:error=&tl_article.create.0' // access $GLOBALS['TL_LANG']['tl_article']['lang'][0]
 	 * );
 	 */
-	protected function parseRule(&$strRule, &$arrAttributes, $strButton, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes, $arrRow=null, $strPrefix='button')
+	protected function parseRule(&$strRule, &$arrAttributes, $strPrefix='button')
 	{
 		$arrRule = explode(':', $strRule);
 		$strRule = $strPrefix . 'Rule' . ucfirst(array_shift($arrRule));
@@ -576,21 +572,22 @@ class DataContainer extends Backend
 		{
 			$arrSplit = explode('=', $strAttribute);
 			
+			
 			if(!isset($arrSplit[1]))
 			{
-				$arrAttributes[$arrSplit[0]] = true;				
+				$arrAttributes[$arrSplit[0]] = true;
+				continue;		
 			}
-			elseif(is_numeric($arrSplit[1]) || $arrSplit[1] == 'false' || $arrSplit[1] == 'true' || (substr($arrSplit[1], 0, 1) == '$'))
-			{
-				$arrAttributes[$arrSplit[0]] = $this->parseValue($arrSplit[1]);
-			}
-			elseif(substr($arrSplit[1], 0, 1) == '[')
+			
+			$strFirst = substr($arrSplit[1], 0, 1);
+			
+			if(substr($arrSplit[1], 0, 1) == '[')
 			{
 				$arrAttributes[$arrSplit[0]] = array_map(array($this, 'parseValue'), explode(',', substr($arrSplit[1], 1, -1)));
 			}
 			else
 			{
-				$arrAttributes[$arrSplit[0]] = $arrSplit[1];
+				$arrAttributes[$arrSplit[0]] = $this->parseValue($arrSplit[1]);
 			}
 		}
 	}
@@ -616,10 +613,33 @@ class DataContainer extends Backend
 		{
 			return false;			
 		}
-		elseif(substr($mixedValue, 0, 1) == '$')
+		
+		$strFirst = substr($mixedValue, 0, 1);
+		
+		if($strFirst == '$')
 		{
 			return $this->{substr($mixedValue, 1)};
 			
+		}
+		elseif($strFirst == '&')
+		{
+			$arrLang = explode('.', substr($mixedValue, 1));
+			
+			if($arrLang[0] == '')
+			{
+				$arrLang[0] = $this->strTable;
+			}
+			elseif($arrLang[0] != 'MOD' && $arrLang[0] != 'MSC') 
+			{
+				$this->loadLanguageFile($arrLang[0]);				
+			}
+			
+			if(isset($arrLang[2]))
+			{
+				return $GLOBALS['TL_LANG'][$arrLang[0]][$arrLang[1]][$arrLang[2]];
+			}
+			
+			return $GLOBALS['TL_LANG'][$arrLang[0]][$arrLang[1]];
 		}
 
 		return $mixedValue;
