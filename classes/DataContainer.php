@@ -25,13 +25,6 @@ use Backend;
  * a generic callback for creating the button. It's nessessary to add the generate rule
  * so you can decide if something should happen after that
  * 
- * ... ['global_button']['button_callback'] => array('TlFiles', 'generateGlobalButton'),
- * ... ['global_button']['button_rules'] = array('isAdmin', 'generate');
- * 
- * By default it try to match against a id. If no id is set it uses the class attribute. This way
- * is nessesarry because the button_callback does not know the name of the button
- * ... ['global_button']['button_rules']['id'] = 'mybutton1';
- * ... ['global_button']['button_rules']['class'] = 'mybutton1';
  */
 class DataContainer extends Backend
 {
