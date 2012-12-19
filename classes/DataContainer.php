@@ -100,12 +100,27 @@ class DataContainer extends Backend
 		
 		$arrRules = $GLOBALS['TL_DCA'][$this->strTable]['config']['permission_rules'];
 		
+		
+		if($this->Input->get('act') != '')
+		{
+			$strErrorDefault = sprintf('User "%s" has not enough permission to run action %s"', $this->User->username, $this->Input->get('act'));
+			
+			if($this->Input->get('id') != '')
+			{
+				$strErrorDefault .= ' on item with ID "' . $this->Input->get('id') . '"';
+			}
+		}
+		else
+		{
+			$strErrorDefault = sprintf('User "%s" has not enough permission to access module %s"', $this->User->username, $this->Input->get('do'));
+		}
+		
 		foreach ($arrRules as $strRule) 
 		{
 			$arrAttributes = array();
-			$this->parseRule($strRule, $arrAttributes, 'permission');
+			$strError = $strErrorDefault;
 			
-			$strError = sprintf('Not enough permissions for action "%" on item with ID "%s"', $this->Input->get('act'), $this->Input->get('id'));
+			$this->parseRule($strRule, $arrAttributes, 'permission');			
 			
 			if(!$this->{$strRule}($objDc, $arrAttributes, $strError))
 			{
@@ -266,7 +281,7 @@ class DataContainer extends Backend
 	 */
 	protected function buttonRuleIsAdmin(&$strButton, &$strHref, &$strLabel, &$strTitle, &$strIcon, &$strAttributes, &$arrAttributes, $arrRow=null)
 	{
-		return $this->User->isAdmin;		
+		return $this->User->isAdmin;
 	}
 	
 	
@@ -664,7 +679,7 @@ class DataContainer extends Backend
 	protected function permissionRuleGeneric($objDc, &$arrAttributes, &$strError)
 	{
 		$this->prepareErrorMessage($arrAttributes, $strError);
-		
+
 		if(isset($arrAttributes['act']))
 		{
 			if(!is_array($arrAttributes['act']))
@@ -672,9 +687,22 @@ class DataContainer extends Backend
 				$arrAttributes['act'] = array($arrAttributes['act']);
 			}
 			
-			if(!in_array($this->Input->get('act'), $arrAttributes['act']))
+			if(in_array($this->Input->get('act'), $arrAttributes['act']))
 			{
-				return false;
+				return true;
+			}			
+		}
+		
+		if(isset($arrAttributes['key']))
+		{
+			if(!is_array($arrAttributes['key']))
+			{
+				$arrAttributes['key'] = array($arrAttributes['key']);
+			}
+			
+			if(!in_array($this->Input->get('key'), $arrAttributes['key']))
+			{
+				return false; 
 			}			
 		}
 	
