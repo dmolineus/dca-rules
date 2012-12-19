@@ -420,6 +420,12 @@ class DataContainer extends Backend
 		
 		if($blnHasAccess && isset($arrAttributes['permission']) && isset($arrAttributes['action']))
 		{
+			if($arrAttributes['action'] == 'alexf')
+			{
+				$strTable = isset($arrAttributes['table']) ? $arrAttributes['table'] : $this->strTable;
+				$arrAttributes['action'] = $strTable . '::' . $arrAttributes['action'];
+			}
+			
 			$blnHasAccess = $this->User->hasAccess($arrAttributes['action'], $arrAttributes['permission']);			
 		}
 		
@@ -444,7 +450,6 @@ class DataContainer extends Backend
 	 * @param attributes supports
 	 * 		- ptable string 	optioinal if want to check isAllowed for another table than data from $arrRow
 	 * 		- field string  	optional column of current row for WHERE id=? statement, default pid
-	 * 		- where string		optional customized where, default id=?
 	 * 		- value string		optional value if not want to check against a value of arrRow, default $arrRow[$pid]
 	 * 		- operation int 	operation integer for BackendUser::isAllowed
 	 * @param array current row
@@ -458,11 +463,10 @@ class DataContainer extends Backend
 		}
 		
 		$strPtable = (isset($arrAttributes['ptable']) && $arrAttributes['ptable'] !== true) ? $arrAttributes['ptable'] : $GLOBALS['TL_DCA'][$this->strTable]['config']['ptable'];
-		$strWhere = isset($arrAttributes['where']) ? $arrAttributes['where'] :  'id=?';
-		$strPId = isset($arrAttributes['pid']) ? $arrAttributes['pid'] : 'pid';
+		$strPId = isset($arrAttributes['pid']) ? $arprAttributes['pid'] : 'pid';
 		$strValue = isset($arrAttributes['value']) ? $arrAttributes['value'] :  $arrRow[$strPId];
 		
-		$objParent = $this->Database->prepare("SELECT * FROM " . $strPtable . " WHERE " . $strWhere)->limit(1)->execute($strValue);								
+		$objParent = $this->Database->prepare("SELECT * FROM " . $strPtable . " WHERE id=?")->limit(1)->execute($strValue);								
 
 		return $this->User->isAllowed($arrAttributes['operation'], $objParent->row());
 	}
@@ -659,7 +663,7 @@ class DataContainer extends Backend
 	 */
 	protected function permissionRuleGeneric($objDc, &$arrAttributes, &$strError)
 	{
-		$blnPermission = true;
+		$this->prepareErrorMessage($arrAttributes, $strError);
 		
 		if(isset($arrAttributes['act']))
 		{
@@ -670,18 +674,11 @@ class DataContainer extends Backend
 			
 			if(!in_array($this->Input->get('act'), $arrAttributes['act']))
 			{
-				$blnPermission = false;
+				return false;
 			}			
 		}
-		
-		if($blnPermission)
-		{
-			return true;
-		}
-		
-		$this->prepareErrorMessage($arrAttributes, $strError);
-		
-		return false;
+	
+		return true;
 	}
 	
 	
