@@ -128,12 +128,12 @@ class DataContainer extends Backend
 	 */
 	public function generateLabel($arrRow, $strLabel, $objDc, $arrValues)
 	{
-		if(!isset($GLOBALS['TL_DCA'][$this->strTable]['list']['config']['label_rules']))
+		if(!isset($GLOBALS['TL_DCA'][$this->strTable]['list']['label']['label_rules']))
 		{
-			return;
+			return $arrValues;
 		}
 		
-		foreach ($GLOBALS['TL_DCA'][$this->strTable]['list']['config']['label_rules'] as $strRule) 
+		foreach ($GLOBALS['TL_DCA'][$this->strTable]['list']['label']['label_rules'] as $strRule) 
 		{
 			$arrAttributes = array();
 			
