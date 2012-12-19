@@ -160,6 +160,33 @@ class DataContainer extends Backend
 		return $arrValues;		
 	}
 	
+
+
+	/**
+	 * rule for generating the button
+	 *
+	 * @param string the button name 
+	 * @param string href
+	 * @param string label
+	 * @param string title
+	 * @param string icon class
+	 * @param string added attributes
+	 * @param array option data row of operation buttons
+	 * @return bool true if rule is passed
+	 */
+	protected function buttonRuleDisableIcon(&$strButton, &$strHref, &$strLabel, &$strTitle, &$strIcon, &$strAttributes, &$arrAttributes, $arrRow=null)
+	{
+		$strRule = $arrAttributes['rule'];
+		$this->parseRule($strRule, $arrAttributes);
+
+		if(!$this->{$strRule}($strButton, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes, $arrAttributes, $arrRow))
+		{
+			$arrAttributes['disable'] = true;
+			$strIcon = isset($arrAttributes['icon']) ? $arrAttributes['icon'] : str_replace('.', '_.', $strIcon);
+		}
+
+		return true;
+	}
 	
 	/**
 	 * rule for generating the button
@@ -191,7 +218,13 @@ class DataContainer extends Backend
 		}
 		
 		// local button
-		else 
+		elseif(isset($arrAttributes['disable']))
+		{
+			$this->strGenerated = sprintf( '<img src="%s" alt="%s" title="%s">', 
+				$strIcon, $strLabel, $strTitle
+			);
+		}
+		else
 		{			
 			if(!isset($arrAttributes['plain']))
 			{
@@ -391,10 +424,10 @@ class DataContainer extends Backend
 		foreach ($arrRules as $strRule) 
 		{
 			$this->parseRule($strRule, $arrAttributes);
-			
+						
 			if(!$this->$strRule($strButton, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes, $arrAttributes, $arrRow))
-			{
-				return '';				
+			{				
+				return '';
 			}
 		}
 		
