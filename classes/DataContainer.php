@@ -37,21 +37,6 @@ class DataContainer extends Backend
 {
 	
 	/**
-	 * @var array global buttons 
-	 */
-	protected $arrGlobalButtons = array();
-	
-	/**
-	 * @var arry buttons buttons 
-	 */
-	protected $arrButtons = array();
-	
-	/**
-	 * @var array label callback
-	 */
-	protected $arrLabelCallback = array();
-	
-	/**
 	 * @var string generated output
 	 */
 	protected $strGenerated = '';
@@ -79,57 +64,32 @@ class DataContainer extends Backend
 			$strTable = 'tl' . preg_replace('/([A-Z])/', '_\0', $strTable);
 			$this->strTable = strtolower($strTable);	
 		}
-		
-		if(!isset($GLOBALS['TL_DCA'][$this->strTable]))
+	}
+
+
+	/**
+	 * use __call to generate seperate methods for each button. so it is possible to
+	 * find a button
+	 * 
+	 * @param string called method
+	 * @param array arguments
+	 */
+	public function __call($strMethod, $arrArguments)
+	{
+		if (strncmp($strMethod, 'generateButton', 14) === 0)
 		{
-			return;
+			$strButton = lcfirst(substr($strMethod, 14));
+			array_insert($arrArguments, 0, $strButton);
+			return call_user_func_array(array($this, 'generateButton'), $arrArguments);
+		}
+		elseif (strncmp($strMethod, 'generateGlobalButton', 20) === 0)
+		{
+			$strButton = lcfirst(substr($strMethod, 20));
+			array_insert($arrArguments, 0, $strButton);
+			return call_user_func_array(array($this, 'generateGlobalButton'), $arrArguments);
 		}
 		
-		// read all button configurations
-		if(isset($GLOBALS['TL_DCA'][$this->strTable]['list']['global_operations']))
-		{
-			foreach ($GLOBALS['TL_DCA'][$this->strTable]['list']['global_operations'] as $strButton => $arrConfig) 
-			{
-				if(!isset($arrConfig['button_rules']))
-				{
-					continue;
-				}
-				
-				$strMatch = (isset($arrConfig['id']) ? 'id' : 'class');
-				
-				$this->arrGlobalButtons[$strButton] = array
-				(
-					'match' => ($strMatch == 'class' ? 'icon' : $strMatch),
-					'value' => $arrConfig[$strMatch],
-				);
-			}
-		}
-		
-		// read all button configurations
-		if(isset($GLOBALS['TL_DCA'][$this->strTable]['list']['operations']))
-		{
-			foreach ($GLOBALS['TL_DCA'][$this->strTable]['list']['operations'] as $strButton => $arrConfig) 
-			{
-				if(!isset($arrConfig['button_rules']))
-				{
-					continue;
-				}
-				
-				$strMatch = (isset($arrConfig['id']) ? 'id' : 'icon');
-				
-				$this->arrButtons[$strButton] = array
-				(
-					'match' => $strMatch,
-					'value' => $arrConfig[$strMatch],
-				);
-			}
-		}
-		
-		// get global label callback
-		if(isset($GLOBALS['TL_DCA'][$this->strTable]['list']['label']['label_rules']))
-		{
-			$this->arrLabelCallback = $GLOBALS['TL_DCA'][$this->strTable]['list']['label']['label_rules'];
-		}
+		return null;
 	}
 
 
@@ -140,6 +100,11 @@ class DataContainer extends Backend
 	 */
 	public function checkPermission($objDc)
 	{
+		if(!isset($GLOBALS['TL_DCA'][$this->strTable]['config']['permission_rules']))
+		{
+			return;
+		}
+		
 		$arrRules = $GLOBALS['TL_DCA'][$this->strTable]['config']['permission_rules'];
 		
 		foreach ($arrRules as $strRule) 
@@ -159,59 +124,6 @@ class DataContainer extends Backend
 	
 	
 	/**
-	 * generic generate button callback
-	 *
-	 * @param string href
-	 * @param string label
-	 * @param string title
-	 * @param string icon class
-	 * @param string added attributes
-	 * @return string
-	 */
-	public function generateButton($arrRow, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes)
-	{
-		$strButton = $this->findButton($strHref, $strLabel, $strTitle, $strIcon, $strAttributes, $arrRow);
-
-		if($strButton === null)
-		{
-			return '';
-		}
-		
-		$arrRules = $GLOBALS['TL_DCA'][$this->strTable]['list'][($arrRow === null) ? 'global_operations' : 'operations'][$strButton]['button_rules'];
-		
-		$this->strGenerated = '';
-		
-		foreach ($arrRules as $strRule) 
-		{
-			$this->parseRule($strRule, $arrAttributes, $strButton, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes, $arrRow);
-			
-			if(!$this->$strRule($strButton, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes, $arrAttributes, $arrRow))
-			{
-				return '';				
-			}
-		}
-		
-		return $this->strGenerated;
-	}
-	
-	
-	/**
-	 * generic create global button callback
-	 *
-	 * @param string href
-	 * @param string label
-	 * @param string title
-	 * @param string icon class
-	 * @param string added attributes
-	 * @return string
-	 */
-	public function generateGlobalButton($strHref, $strLabel, $strTitle, $strIcon, $strAttributes)
-	{
-		return $this->generateButton(null, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes);
-	}
-	
-	
-	/**
 	 * generic generateLabel callback
 	 * 
 	 * @param array current row
@@ -222,12 +134,12 @@ class DataContainer extends Backend
 	 */
 	public function generateLabel($arrRow, $strLabel, $objDc, $arrValues)
 	{
-		if(empty($this->arrLabelCallback))
+		if(!isset($GLOBALS['TL_DCA'][$this->strTable]['list']['config']['label_rules']))
 		{
 			return;
 		}
 		
-		foreach ($this->arrLabelCallback as $strRule) 
+		foreach ($GLOBALS['TL_DCA'][$this->strTable]['list']['config']['label_rules'] as $strRule) 
 		{
 			$arrAttributes = array();
 			
@@ -445,27 +357,56 @@ class DataContainer extends Backend
 	
 	
 	/**
-	 * find button by trying to match it against the configuration
-	 * 
+	 * generic generate button callback
+	 *
 	 * @param string href
 	 * @param string label
 	 * @param string title
 	 * @param string icon class
 	 * @param string added attributes
-	 * @return bool true if rule is passed
+	 * @return string
 	 */
-	protected function findButton($href, $label, $title, $icon, $attributes, $arrRow=null)
+	protected function generateButton($strButton, $arrRow, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes)
 	{
-		$arrSearch = ($arrRow === null) ? 'arrGlobalButtons' : 'arrButtons';
+		$strOperation = ($arrRow === null) ? 'global_operations' : 'operations';
 		
-		foreach ($this->{$arrSearch} as $strButton => $arrOption) 
-		{			
-			if(${$arrOption['match']} == $arrOption['value'])
-			{
-				return $strButton;
-			} 			
+		if($strButton === null || !isset($GLOBALS['TL_DCA'][$this->strTable]['list'][$strOperation][$strButton]['button_rules']))
+		{
+			return '';
 		}
+		
+		$arrRules = $GLOBALS['TL_DCA'][$this->strTable]['list'][$strOperation][$strButton]['button_rules'];
+		
+		$this->strGenerated = '';
+		
+		foreach ($arrRules as $strRule) 
+		{
+			$this->parseRule($strRule, $arrAttributes, $strButton, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes, $arrRow);
+			
+			if(!$this->$strRule($strButton, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes, $arrAttributes, $arrRow))
+			{
+				return '';				
+			}
+		}
+		
+		return $this->strGenerated;
 	}
+	
+	
+	/**
+	 * generic create global button callback
+	 *
+	 * @param string href
+	 * @param string label
+	 * @param string title
+	 * @param string icon class
+	 * @param string added attributes
+	 * @return string
+	 */
+	protected function generateGlobalButton($strButton, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes)
+	{
+		return $this->generateButton($strButton, null, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes);
+	}	
 	
 	
 	/**
