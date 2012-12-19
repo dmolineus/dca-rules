@@ -572,7 +572,6 @@ class DataContainer extends Backend
 		{
 			$arrSplit = explode('=', $strAttribute);
 			
-			
 			if(!isset($arrSplit[1]))
 			{
 				$arrAttributes[$arrSplit[0]] = true;
