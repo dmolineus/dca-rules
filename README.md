@@ -16,10 +16,10 @@ How dca-rules works
 dca-rules solves this issue by providing general callbacks which depends on defined rules in the dca files. At
 the moment there are four callbacks defined:
 
-* checkPermission 		for the dca onload_callback
-* generateButton		for generating a operation button
-* generateGlobalButton 	for generating a global operation button
-* generateLabel			for the label_callback in the list view
+* checkPermission 			for the dca onload_callback
+* generateButton*			for generating a operation button, replace wildcard with button name
+* generateGlobalButton* 	for generating a global operation button, replace wildcard with button name
+* generateLabel				for the label_callback in the list view
 
 Then you can set up somes rules for them by using following variables
 
@@ -53,8 +53,8 @@ provides callbacks
 	}
 
 	// in the tl_my_table.php
-	$GLOBALS['TL_DCA']['table']['list']['operations']['button']['button_callback'] = array('Author\Vendor\DataContainer\MyTable', 'generateButton');
-	$GLOBALS['TL_DCA']['table']['list']['operations']['button']['button_rules'] = array('isAdmin', 'generate');
+	$GLOBALS['TL_DCA']['table']['list']['operations']['test']['button_callback'] = array('Author\Vendor\DataContainer\MyTable', 'generateButtonTest');
+	$GLOBALS['TL_DCA']['table']['list']['operations']['test']['button_rules'] = array('isAdmin', 'generate');
 	
 Using rules
 ------
@@ -69,7 +69,8 @@ them:
 	$rule = array('rule:attribute=[one,two,three]'); // will set attribute to an array(one,two,three)
 	$rule = array('rule:attribute=[true,2,false,$value,2.3]'); // values of an array will be converted to ints and bool as well
 	$rule = array('rule:a=2:b=3:c:4');	// combining attributes
-	$rul
+	$rule = array('rule:error=&.errors.1'); // accessing language vars of current table
+	$rule = array('rule:error=&MSC.yes'); // accessing language var $GLOBALS['TL_LANG']['MSC']['yes']
 
 Maybe you want to create a toggle icon for a field called 'status'. The toggleIcon will automatically check if the user has access to the field. So
 the only thing you have to do is to define the rule and pass the field. If no field is set it uses the published field
