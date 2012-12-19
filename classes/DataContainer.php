@@ -91,7 +91,7 @@ class DataContainer extends Backend
 	 * 
 	 * @param DataContainer 
 	 */
-	public function checkPermission($objDc)
+	public function checkPermission($objDc=null)
 	{
 		if(!isset($GLOBALS['TL_DCA'][$this->strTable]['config']['permission_rules']))
 		{
@@ -137,7 +137,8 @@ class DataContainer extends Backend
 		{
 			$arrAttributes = array();
 			
-			$this->parseRule($strRule, $arrAttributes, 'label');			
+			$this->parseRule($strRule, $arrAttributes, 'label');	
+					
 			$this->{$strRule}($arrRow, $strLabel, $objDc, $arrValues, $arrAttributes);
 		}
 		
