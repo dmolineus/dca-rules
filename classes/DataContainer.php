@@ -100,7 +100,7 @@ class DataContainer extends Backend
 		
 		$arrRules = $GLOBALS['TL_DCA'][$this->strTable]['config']['permission_rules'];
 		
-		
+		// generate default error message
 		if($this->Input->get('act') != '')
 		{
 			$strErrorDefault = sprintf('User "%s" has not enough permission to run action %s"', $this->User->username, $this->Input->get('act'));
@@ -117,7 +117,6 @@ class DataContainer extends Backend
 		
 		foreach ($arrRules as $strRule) 
 		{
-			$arrAttributes = array();
 			$strError = $strErrorDefault;
 			
 			$this->parseRule($strRule, $arrAttributes, 'permission');			
@@ -127,7 +126,9 @@ class DataContainer extends Backend
 				$this->log($strError, $this->strTable . ' checkPermission', TL_ERROR);
 				$this->redirect('contao/main.php?act=error');
 				return;
-			}			
+			}
+
+			$this->resetAttributes($arrAttributes);
 		}
 	}
 	
@@ -152,9 +153,10 @@ class DataContainer extends Backend
 		{
 			$arrAttributes = array();
 			
-			$this->parseRule($strRule, $arrAttributes, 'label');	
-					
+			$this->parseRule($strRule, $arrAttributes, 'label');						
 			$this->{$strRule}($arrRow, $strLabel, $objDc, $arrValues, $arrAttributes);
+			
+			$this->resetAttributes($arrAttributes);
 		}
 		
 		return $arrValues;		
@@ -182,11 +184,13 @@ class DataContainer extends Backend
 		if(!$this->{$strRule}($strButton, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes, $arrAttributes, $arrRow))
 		{
 			$arrAttributes['disable'] = true;
+			$arrAttributes['__set__'][] = 'disable';
 			$strIcon = isset($arrAttributes['icon']) ? $arrAttributes['icon'] : str_replace('.', '_.', $strIcon);
 		}
 
 		return true;
 	}
+	
 	
 	/**
 	 * rule for generating the button
@@ -268,6 +272,7 @@ class DataContainer extends Backend
 	{
 		$strHref = $this->getReferer(true);
 		$arrAttributes['plain'] = true;
+		$arrAttributes['__set__'][] = 'plain';
 		
 		return true;
 	}
@@ -429,6 +434,8 @@ class DataContainer extends Backend
 			{				
 				return '';
 			}
+			
+			$this->resetAttributes($arrAttributes);
 		}
 		
 		return $this->strGenerated;
@@ -855,6 +862,34 @@ class DataContainer extends Backend
 				$strError = call_user_func_array('sprintf', $arrParams);				
 			}
 		}
+	}
+	
+	
+	/**
+	 * reset attributes will remove attributes which are not flagged in __set__
+	 * 
+	 * @param array attributes
+	 */
+	protected function resetAttributes(&$arrAttributes)
+	{
+		if(!isset($arrAttributes['__set__']) || empty($arrAttributes['__set__']))
+		{
+			$arrAttributes = array();
+			return;	
+		}
+		
+		$arrNew = array();
+		$arrNew['__set__'] = $arrAttributes['__set__'];
+		
+		foreach ($arrAttributes['__set__'] as $strKey) 
+		{
+			if(isset($arrAttributes[$strKey]))
+			{
+				$arrNew[$strKey] = $arrAttributes[$strKey];
+			}			
+		}
+		
+		$arrAttributes = $arrNew;
 	}
 
 
