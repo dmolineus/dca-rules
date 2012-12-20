@@ -885,16 +885,16 @@ class DataContainer extends Backend
 			$this->redirect('contao/main.php?act=error');
 		}
 		
-		if(isset($GLOBALS['TL_DCA'][$this->strTable]['config']['enableVersioning']) && $GLOBALS['TL_DCA'][$this->strTable]['config']['enableVersioning'])
+		if(isset($GLOBALS['TL_DCA'][$strTable]['config']['enableVersioning']) && $GLOBALS['TL_DCA'][$strTable]['config']['enableVersioning'])
 		{
 			$this->createInitialVersion($strTable, $intId);
 			
 		}
 
 		// Trigger the save_callback
-		if (is_array($GLOBALS['TL_DCA']['tl_news']['fields'][$strField]['save_callback']))
+		if (is_array($GLOBALS['TL_DCA'][$strTable]['fields'][$strField]['save_callback']))
 		{
-			foreach ($GLOBALS['TL_DCA']['tl_news']['fields'][$strField]['save_callback'] as $callback)
+			foreach ($GLOBALS['TL_DCA'][$strTable]['fields'][$strField]['save_callback'] as $callback)
 			{
 				$this->import($callback[0]);
 				$blnVisible = $this->$callback[0]->$callback[1]($blnVisible, $this);
@@ -906,7 +906,7 @@ class DataContainer extends Backend
 					   ->execute($intId);
 
 
-		if(isset($GLOBALS['TL_DCA'][$this->strTable]['config']['enableVersioning']) && $GLOBALS['TL_DCA'][$this->strTable]['config']['enableVersioning'])
+		if(isset($GLOBALS['TL_DCA'][$strTable]['config']['enableVersioning']) && $GLOBALS['TL_DCA'][$strTable]['config']['enableVersioning'])
 		{
 			$this->createNewVersion($strTable, $intId);
 			
