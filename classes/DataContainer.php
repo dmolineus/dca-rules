@@ -39,6 +39,11 @@ class DataContainer extends Backend
 	 */
 	protected $strTable;
 	
+	/**
+	 * store registered rules
+	 */
+	protected $arrayRules = array();
+	
 	
 	/**
 	 * constructor fetches all configurations
