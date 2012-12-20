@@ -232,12 +232,12 @@ class DataContainer extends Backend
 		{			
 			if(!isset($arrAttributes['plain']))
 			{
-				if(!isset($arrAttributes['table']))
+				if(!isset($arrAttributes['noTable']))
 				{
 					$strHref .= '&table=' . $this->strTable;			
 				}
 				
-				if(!isset($arrAttributes['id']))
+				if(!isset($arrAttributes['noId']))
 				{
 					$strHref .= '&id=' . $arrRow['id'] ;			
 				}
