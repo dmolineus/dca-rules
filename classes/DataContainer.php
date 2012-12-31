@@ -173,6 +173,7 @@ class DataContainer extends Backend
 	 * @param string title
 	 * @param string icon class
 	 * @param string added attributes
+	 * @param array attributes
 	 * @param array option data row of operation buttons
 	 * @return bool true if rule is passed
 	 */
@@ -201,6 +202,7 @@ class DataContainer extends Backend
 	 * @param string title
 	 * @param string icon class
 	 * @param string added attributes
+	 * @param array attributes
 	 * @param array option data row of operation buttons
 	 * @return bool true if rule is passed
 	 */
@@ -211,7 +213,7 @@ class DataContainer extends Backend
 		{
 			if(!isset($arrAttributes['plain']))
 			{
-				$strHref = $this->addToUrl($strHref);	
+				$strHref = 'contao/main.php?do=' . $this->Input->get('do') . '&' . $strHref . '&rt=' . REQUEST_TOKEN;
 			}
 			
 			$this->strGenerated .= sprintf
@@ -224,9 +226,7 @@ class DataContainer extends Backend
 		// local button
 		elseif(isset($arrAttributes['disable']))
 		{
-			$this->strGenerated = sprintf( '<img src="%s" alt="%s" title="%s">', 
-				$strIcon, $strLabel, $strTitle
-			);
+			$this->strGenerated = $this->generateImage($strIcon, $strLabel) . ' ';
 		}
 		else
 		{			
@@ -243,6 +243,28 @@ class DataContainer extends Backend
 				}
 				
 				$strHref = $this->addToUrl($strHref);	
+			}
+			else 
+			{
+				$blnFirst = (strpos($strHref, '?') === false);
+				
+				if(isset($arrAttributes['table']))
+				{
+					$strHref .= ($blnFirst ? '?' : '&') . 'table=' . ($arrAttributes['table'] === true ? $this->strTable : $arrAttributes['table']);
+					$blnFirst = false;			
+				}
+				
+				if(isset($arrAttributes['id']))
+				{
+					$strHref .= ($blnFirst ? '?' : '&') . 'id=' . $arrRow['id'] ;
+					$blnFirst = false;			
+				}
+				
+				if(isset($arrAttributes['rt']))
+				{
+					$strHref .= ($blnFirst ? '?' : '&') . 'rt=' . REQUEST_TOKEN ;
+					$blnFirst = false;			
+				}
 			}
 			
 			$this->strGenerated .= sprintf
@@ -265,6 +287,7 @@ class DataContainer extends Backend
 	 * @param string title
 	 * @param string icon class
 	 * @param string added attributes
+	 * @param array attributes
 	 * @param array option data row of operation buttons
 	 * @return bool true if rule is passed
 	 */
@@ -314,6 +337,7 @@ class DataContainer extends Backend
 	 * @param string title
 	 * @param string icon class
 	 * @param string added attributes
+	 * @param array attributes
 	 * @param array option data row of operation buttons
 	 * @return bool true if rule is passed
 	 */
@@ -394,7 +418,7 @@ class DataContainer extends Backend
 
 		$strHref .= '&amp;tid='.$arrRow['id'].'&amp;state='.($arrRow[$strField] ? '' : 1);
 
-		if (!$arrRow[$strField])
+		if ((isset($arrAttributes['inverted']) ? $arrRow[$strField] : !$arrRow[$strField]))
 		{
 			$strIcon = (isset($arrAttributes['icon'])) ? $arrAttributes['icon'] : 'invisible.gif';
 		}
@@ -473,11 +497,20 @@ class DataContainer extends Backend
 			$blnHasAccess = $this->User->hasAccess($arrAttributes['module'], 'module');			
 		}
 		
+		if($arrAttributes['ptable'])
+		{
+			$strTable = $GLOBALS['TL_DCA'][$this->strTable]['config']['ptable'];
+		}
+		else
+		{
+			$strTable = isset($arrAttributes['table']) ? $arrAttributes['table'] : $this->strTable;
+		}
+		
 		if($blnHasAccess && isset($arrAttributes['permission']) && isset($arrAttributes['action']))
 		{
 			if($arrAttributes['action'] == 'alexf')
 			{
-				$strTable = isset($arrAttributes['table']) ? $arrAttributes['table'] : $this->strTable;
+				
 				$arrAttributes['action'] = $strTable . '::' . $arrAttributes['action'];
 			}
 			
@@ -486,7 +519,6 @@ class DataContainer extends Backend
 		
 		if($blnHasAccess && isset($arrAttributes['alexf']))
 		{
-			$strTable = isset($arrAttributes['table']) ? $arrAttributes['table'] : $this->strTable;
 			$blnHasAccess = $this->User->hasAccess($strTable . '::' . $arrAttributes['alexf'], 'alexf');
 		}
 		
@@ -719,6 +751,7 @@ class DataContainer extends Backend
 	protected function permissionRuleGeneric($objDc, &$arrAttributes, &$strError)
 	{
 		$this->prepareErrorMessage($arrAttributes, $strError);
+		$blnAccess = true;
 
 		if(isset($arrAttributes['act']))
 		{
@@ -730,7 +763,9 @@ class DataContainer extends Backend
 			if(in_array($this->Input->get('act'), $arrAttributes['act']))
 			{
 				return true;
-			}			
+			}
+			
+			$blnAccess = false;
 		}
 		
 		if(isset($arrAttributes['key']))
@@ -740,13 +775,15 @@ class DataContainer extends Backend
 				$arrAttributes['key'] = array($arrAttributes['key']);
 			}
 			
-			if(!in_array($this->Input->get('key'), $arrAttributes['key']))
+			if(in_array($this->Input->get('key'), $arrAttributes['key']))
 			{
-				return false; 
-			}			
+				return true; 
+			}
+			
+			$blnAccess = false;		
 		}
 	
-		return true;
+		return $blnAccess;
 	}
 	
 	
@@ -759,7 +796,7 @@ class DataContainer extends Backend
 	 * @return bool
 	 */
 	protected function permissionRuleHasAccess($objDc, &$arrAttributes, &$strError)
-	{		
+	{	
 		if($this->permissionRuleGeneric($objDc, $arrAttributes, $strError))
 		{
 			return $this->genericHasAccess($arrAttributes);			
@@ -907,6 +944,11 @@ class DataContainer extends Backend
 		
 		$this->checkPermission();
 		
+		if(isset($arrAttributes['inverted']))
+		{
+			$blnVisible = !$blnVisible;
+		}
+		
 		$strTable = (isset($arrAttributes['table'])) ? $arrAttributes['table'] : $this->strTable;
 		$strField = (isset($arrAttributes['field'])) ? $arrAttributes['field'] : 'published';
 
@@ -923,7 +965,6 @@ class DataContainer extends Backend
 		if(isset($GLOBALS['TL_DCA'][$strTable]['config']['enableVersioning']) && $GLOBALS['TL_DCA'][$strTable]['config']['enableVersioning'])
 		{
 			$this->createInitialVersion($strTable, $intId);
-			
 		}
 
 		// Trigger the save_callback
