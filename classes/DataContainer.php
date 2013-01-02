@@ -490,11 +490,9 @@ class DataContainer extends Backend
 	 */
 	protected function genericHasAccess(&$arrAttributes)
 	{
-		$blnHasAccess = true;
-		
 		if(isset($arrAttributes['module']))
 		{
-			$blnHasAccess = $this->User->hasAccess($arrAttributes['module'], 'module');			
+			return $this->User->hasAccess($arrAttributes['module'], 'modules');			
 		}
 		
 		if($arrAttributes['ptable'])
@@ -506,7 +504,7 @@ class DataContainer extends Backend
 			$strTable = isset($arrAttributes['table']) ? $arrAttributes['table'] : $this->strTable;
 		}
 		
-		if($blnHasAccess && isset($arrAttributes['permission']) && isset($arrAttributes['action']))
+		if(isset($arrAttributes['permission']) && isset($arrAttributes['action']))
 		{
 			if($arrAttributes['action'] == 'alexf')
 			{
@@ -514,20 +512,18 @@ class DataContainer extends Backend
 				$arrAttributes['action'] = $strTable . '::' . $arrAttributes['action'];
 			}
 			
-			$blnHasAccess = $this->User->hasAccess($arrAttributes['action'], $arrAttributes['permission']);			
+			return $this->User->hasAccess($arrAttributes['action'], $arrAttributes['permission']);			
 		}
-		
-		if($blnHasAccess && isset($arrAttributes['alexf']))
+		elseif(isset($arrAttributes['alexf']))
 		{
-			$blnHasAccess = $this->User->hasAccess($strTable . '::' . $arrAttributes['alexf'], 'alexf');
+			return $this->User->hasAccess($strTable . '::' . $arrAttributes['alexf'], 'alexf');
 		}
-		
-		if($blnHasAccess && isset($arrAttributes['fop']))
+		elseif(isset($arrAttributes['fop']))
 		{
-			$blnHasAccess = $this->User->hasAccess($arrAttributes['fop'], 'fop');
+			return $this->User->hasAccess($arrAttributes['fop'], 'fop');
 		}
 		
-		return $blnHasAccess;
+		return false;
 	}
 	
 	
