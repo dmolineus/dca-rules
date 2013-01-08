@@ -771,6 +771,11 @@ class DataContainer extends Backend
 
 		if(isset($arrAttributes['act']))
 		{
+			if($arrAttributes['act'] == '*' && $this->Input->get('act') != '')
+			{
+				return true;
+			}
+			
 			if(!is_array($arrAttributes['act']))
 			{
 				$arrAttributes['act'] = array($arrAttributes['act']);
@@ -786,6 +791,11 @@ class DataContainer extends Backend
 		
 		if(isset($arrAttributes['key']))
 		{
+			if($arrAttributes['key'] == '*' && $this->Input->get('act') != '')
+			{
+				return true;
+			}
+			
 			if(!is_array($arrAttributes['key']))
 			{
 				$arrAttributes['key'] = array($arrAttributes['key']);
