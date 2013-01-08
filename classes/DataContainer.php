@@ -52,8 +52,9 @@ class DataContainer extends Backend
 		
 		if($this->strTable === null)
 		{
-			$strTable = get_class($this);
-			$strTable = substr($strTable, strrpos($strTable, '\\')+1);
+			$strTable = get_class($this);	
+			$intPosNs = strrpos($strTable, '\\');				
+			$strTable = $intPosNs === false ? $strTable : substr($strTable, $intPosNs+1);
 			$strTable = 'tl' . preg_replace('/([A-Z])/', '_\0', $strTable);
 			$this->strTable = strtolower($strTable);	
 		}
@@ -179,16 +180,25 @@ class DataContainer extends Backend
 	 */
 	protected function buttonRuleDisableIcon(&$strButton, &$strHref, &$strLabel, &$strTitle, &$strIcon, &$strAttributes, &$arrAttributes, $arrRow=null)
 	{
-		$strRule = $arrAttributes['rule'];
-		$this->parseRule($strRule, $arrAttributes);
-
-		if(!$this->{$strRule}($strButton, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes, $arrAttributes, $arrRow))
+		if(isset($arrAttributes['rule']))
+		{
+			$strRule = $arrAttributes['rule'];
+			$this->parseRule($strRule, $arrAttributes);
+	
+			$blnDisable = $this->{$strRule}($strButton, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes, $arrAttributes, $arrRow);
+		}
+		else
+		{
+			$blnDisable = (bool) $arrAttributes['value'];
+		}
+			
+		if($blnDisable && !$arrAttributes['disable'])
 		{
 			$arrAttributes['disable'] = true;
 			$arrAttributes['__set__'][] = 'disable';
 			$strIcon = isset($arrAttributes['icon']) ? $arrAttributes['icon'] : str_replace('.', '_.', $strIcon);
 		}
-
+		
 		return true;
 	}
 	
@@ -213,6 +223,16 @@ class DataContainer extends Backend
 		{
 			if(!isset($arrAttributes['plain']))
 			{
+				if(isset($arrAttributes['table']))
+				{
+					$strHref .= '&table=' . ($arrAttributes['table'] === true ? $this->strTable : $arrAttributes['table']);		
+				}
+				
+				if(isset($arrAttributes['id']))
+				{
+					$strHref .= '&id=' . ($arrAttributes['id'] === true ? $this->Input->get('id') : $arrAttributes['id']);		
+				}
+				
 				$strHref = 'contao/main.php?do=' . $this->Input->get('do') . '&' . $strHref . '&rt=' . REQUEST_TOKEN;
 			}
 			
@@ -954,7 +974,7 @@ class DataContainer extends Backend
 			$strError = 'Not enough permissions to toggle state of item ID "'.$intId.'"';
 			$this->prepareErrorMessage($arrAttributes, $strError);
 			 
-			$this->log($strError, $this->strTable . ' toggleState', TL_ERROR);
+			$this->log($strError, get_class($this) . ' toggleState', TL_ERROR);
 			$this->redirect('contao/main.php?act=error');
 		}
 		
