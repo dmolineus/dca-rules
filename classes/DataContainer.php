@@ -185,7 +185,7 @@ class DataContainer extends Backend
 			$strRule = $arrAttributes['rule'];
 			$this->parseRule($strRule, $arrAttributes);
 	
-			$blnDisable = $this->{$strRule}($strButton, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes, $arrAttributes, $arrRow);
+			$blnDisable = !$this->{$strRule}($strButton, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes, $arrAttributes, $arrRow);
 		}
 		else
 		{
