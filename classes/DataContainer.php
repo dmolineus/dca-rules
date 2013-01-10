@@ -185,17 +185,18 @@ class DataContainer extends Backend
 			$strRule = $arrAttributes['rule'];
 			$this->parseRule($strRule, $arrAttributes);
 	
-			$blnDisable = !$this->{$strRule}($strButton, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes, $arrAttributes, $arrRow);
+			$blnDisable = $this->{$strRule}($strButton, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes, $arrAttributes, $arrRow);
 		}
 		else
 		{
 			$blnDisable = (bool) $arrAttributes['value'];
 		}
 			
-		if($blnDisable && !$arrAttributes['disable'])
+		if(!$blnDisable && !isset($arrAttributes['disable']))
 		{
 			$arrAttributes['disable'] = true;
 			$arrAttributes['__set__'][] = 'disable';
+			
 			$strIcon = isset($arrAttributes['icon']) ? $arrAttributes['icon'] : str_replace('.', '_.', $strIcon);
 		}
 		
@@ -225,21 +226,21 @@ class DataContainer extends Backend
 			{
 				if(isset($arrAttributes['table']))
 				{
-					$strHref .= '&table=' . ($arrAttributes['table'] === true ? $this->strTable : $arrAttributes['table']);		
+					$strHref .= ($strHref == '' ? '' : '&amp;') .'table=' . ($arrAttributes['table'] === true ? $this->strTable : $arrAttributes['table']);		
 				}
 				
 				if(isset($arrAttributes['id']))
 				{
-					$strHref .= '&id=' . ($arrAttributes['id'] === true ? $this->Input->get('id') : $arrAttributes['id']);		
+					$strHref .= ($strHref == '' ? '' : '&amp;') .'id=' . ($arrAttributes['id'] === true ? $this->Input->get('id') : $arrAttributes['id']);		
 				}
 				
-				$strHref = 'contao/main.php?do=' . $this->Input->get('do') . '&' . $strHref . '&rt=' . REQUEST_TOKEN;
+				$strHref = \Environment::get('script'). '?do=' . $this->Input->get('do') . '&amp;' . $strHref . '&amp;rt=' . REQUEST_TOKEN;
 			}
 			
 			$this->strGenerated .= sprintf
 			(
-				'<a href="%s" class="%s" title="%s" %s>%s</a>',
-				$strHref, $strIcon, $strTitle,  $strAttributes, $strLabel
+				'<a href="%s" class="%s" title="%s"%s>%s</a>',
+				$strHref, $strIcon, $strTitle, ($strAttributes != '' ? ' ' : '') .  $strAttributes, $strLabel
 			);
 		}
 		
@@ -254,12 +255,12 @@ class DataContainer extends Backend
 			{
 				if(!isset($arrAttributes['noTable']))
 				{
-					$strHref .= '&table=' . $this->strTable;			
+					$strHref .= ($strHref == '' ? '' : '&amp;') . 'table=' . $this->strTable;			
 				}
 				
 				if(!isset($arrAttributes['noId']))
 				{
-					$strHref .= '&id=' . $arrRow['id'] ;			
+					$strHref .= ($strHref == '' ? '' : '&amp;') . 'id=' . $arrRow['id'] ;			
 				}
 				
 				$strHref = $this->addToUrl($strHref);	
@@ -289,8 +290,8 @@ class DataContainer extends Backend
 			
 			$this->strGenerated .= sprintf
 			(
-				'<a href="%s" title="%s" %s>%s</a> ',
-				$strHref, $strTitle,  $strAttributes, $this->generateImage($strIcon, $strLabel)
+				'<a href="%s" title="%s"%s>%s</a> ',
+				$strHref, $strTitle, ($strAttributes != '' ? ' ' : '') .  $strAttributes, $this->generateImage($strIcon, $strLabel)
 			);			
 		}
 		
@@ -736,16 +737,20 @@ class DataContainer extends Backend
 			{
 				$arrLang[0] = $this->strTable;
 			}
-			elseif($arrLang[0] != 'MOD' && $arrLang[0] != 'MSC') 
+			elseif($arrLang[0] != 'MOD' && $arrLang[0] != 'MSC' && $arrLang[0] != 'ERR') 
 			{
 				$this->loadLanguageFile($arrLang[0]);				
+			}
+			else
+			{
+				$this->loadLanguageFile($arrLang[0] == 'MOD' ? 'modules' : 'default');				
 			}
 			
 			if(isset($arrLang[2]))
 			{
 				return $GLOBALS['TL_LANG'][$arrLang[0]][$arrLang[1]][$arrLang[2]];
 			}
-			
+
 			return $GLOBALS['TL_LANG'][$arrLang[0]][$arrLang[1]];
 		}
 
