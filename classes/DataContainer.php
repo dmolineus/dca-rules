@@ -104,7 +104,7 @@ class DataContainer extends Backend
 		// generate default error message
 		if($this->Input->get('act') != '')
 		{
-			$strErrorDefault = sprintf('User "%s" has not enough permission to run action %s"', $this->User->username, $this->Input->get('act'));
+			$strErrorDefault = sprintf('User "%s" has not enough permission to run action "%s"', $this->User->username, $this->Input->get('act'));
 			
 			if($this->Input->get('id') != '')
 			{
@@ -113,7 +113,7 @@ class DataContainer extends Backend
 		}
 		else
 		{
-			$strErrorDefault = sprintf('User "%s" has not enough permission to access module %s"', $this->User->username, $this->Input->get('do'));
+			$strErrorDefault = sprintf('User "%s" has not enough permission to access module "%s"', $this->User->username, $this->Input->get('do'));
 		}
 		
 		foreach ($arrRules as $strRule) 
@@ -786,7 +786,14 @@ class DataContainer extends Backend
 				$arrAttributes['act'] = array($arrAttributes['act']);
 			}
 			
-			if(in_array($this->Input->get('act'), $arrAttributes['act']))
+			if($arrAttributes['act'][0] == '*')
+			{
+				if($this->Input->get('act') != '*' && !in_array($this->Input->get('act'), $arrAttributes['act']))
+				{
+					return true;					
+				}				
+			}
+			elseif(in_array($this->Input->get('act'), $arrAttributes['act']))
 			{
 				return true;
 			}
@@ -806,7 +813,14 @@ class DataContainer extends Backend
 				$arrAttributes['key'] = array($arrAttributes['key']);
 			}
 			
-			if(in_array($this->Input->get('key'), $arrAttributes['key']))
+			if($arrAttributes['key'][0] == '*')
+			{
+				if($this->Input->get('key') != '*' && !in_array($this->Input->get('key'), $arrAttributes['key']))
+				{
+					return true;					
+				}				
+			}
+			elseif(in_array($this->Input->get('key'), $arrAttributes['key']))
 			{
 				return true; 
 			}
