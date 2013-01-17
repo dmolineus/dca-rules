@@ -250,7 +250,16 @@ class DataContainer extends Backend
 			$this->strGenerated = $this->generateImage($strIcon, $strLabel) . ' ';
 		}
 		else
-		{			
+		{
+			// other callbacks can be registered for generating
+			if(isset($arrAttributes['callback']) && is_array($arrAttributes['callback']))
+			{
+				$callback = $arrAttributes['callback'];
+				$this->import($callback[0]);
+				$this->strGenerated = $this->$callback[0]->$callback[1]($arrRow, $strHref, $strLabel, $strTitle, $strIcon, $strAttributes);
+				return true;
+			}
+			
 			if(!isset($arrAttributes['plain']))
 			{
 				if(!isset($arrAttributes['noTable']))
