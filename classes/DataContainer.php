@@ -446,7 +446,10 @@ class DataContainer extends Backend
 			return false;
 		}
 
-		$strHref .= '&amp;tid='.$arrRow['id'].'&amp;state='.($arrRow[$strField] ? '' : 1);
+		$strHref .= '&amp;id='.$arrRow['pid'].'&amp;tid='.$arrRow['id'].'&amp;state='.($arrRow[$strField] ? '' : 1);
+		
+		$arrAttributes['noId'] = true;
+		$arrAttributes['__set__'][] = 'noId';
 
 		if ((isset($arrAttributes['inverted']) ? $arrRow[$strField] : !$arrRow[$strField]))
 		{
