@@ -120,7 +120,7 @@ class DataContainer extends Backend
 		{
 			$strError = $strErrorDefault;
 			
-			$this->parseRule($strRule, $arrAttributes, 'permission');			
+			$this->parseRule($strRule, $arrAttributes, 'permission');				
 			
 			if(!$this->{$strRule}($objDc, $arrAttributes, $strError))
 			{
@@ -439,6 +439,7 @@ class DataContainer extends Backend
 		
 		$strTable = (isset($arrAttributes['table'])) ? $arrAttributes['table'] : $this->strTable;
 		$strField = (isset($arrAttributes['field'])) ? $arrAttributes['field'] : 'published';
+		$blnVisible = (isset($arrAttributes['inverted']) ? $arrRow[$strField] : !$arrRow[$strField]);
 		
 		// Check permissions AFTER checking the tid, so hacking attempts are logged
 		if (!$this->User->isAdmin && !$this->User->hasAccess($strTable . '::' . $strField , 'alexf'))
@@ -446,12 +447,12 @@ class DataContainer extends Backend
 			return false;
 		}
 
-		$strHref .= '&amp;id='.$arrRow['pid'].'&amp;tid='.$arrRow['id'].'&amp;state='.($arrRow[$strField] ? '' : 1);
+		$strHref .= '&amp;id='.$arrRow['pid'].'&amp;tid='.$arrRow['id'].'&amp;state='.($blnVisible ? 1 : '');
 		
 		$arrAttributes['noId'] = true;
 		$arrAttributes['__set__'][] = 'noId';
 
-		if ((isset($arrAttributes['inverted']) ? $arrRow[$strField] : !$arrRow[$strField]))
+		if ($blnVisible)
 		{
 			$strIcon = (isset($arrAttributes['icon'])) ? $arrAttributes['icon'] : 'invisible.gif';
 		}
@@ -994,13 +995,13 @@ class DataContainer extends Backend
 	 * @param boolean
 	 */
 	protected function toggleState($intId, $blnVisible, &$arrAttributes)
-	{
+	{		
 		// Check permissions to edit
 		$this->Input->setGet('id', $intId);
 		$this->Input->setGet('act', 'toggle');
 		
 		$this->checkPermission();
-		
+				
 		if(isset($arrAttributes['inverted']))
 		{
 			$blnVisible = !$blnVisible;
@@ -1017,7 +1018,7 @@ class DataContainer extends Backend
 			 
 			$this->log($strError, get_class($this) . ' toggleState', TL_ERROR);
 			$this->redirect('contao/main.php?act=error');
-		}
+		}		
 		
 		if(isset($GLOBALS['TL_DCA'][$strTable]['config']['enableVersioning']) && $GLOBALS['TL_DCA'][$strTable]['config']['enableVersioning'])
 		{
@@ -1037,7 +1038,6 @@ class DataContainer extends Backend
 		// Update the database
 		$this->Database->prepare("UPDATE " . $strTable . " SET tstamp=". time() .", " . $strField ."='" . ($blnVisible ? 1 : '') . "' WHERE id=?")
 					   ->execute($intId);
-
 
 		if(isset($GLOBALS['TL_DCA'][$strTable]['config']['enableVersioning']) && $GLOBALS['TL_DCA'][$strTable]['config']['enableVersioning'])
 		{
